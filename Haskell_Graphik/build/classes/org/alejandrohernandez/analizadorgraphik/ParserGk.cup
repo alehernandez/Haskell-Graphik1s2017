@@ -1,0 +1,423 @@
+
+package org.alejandrohernandez.analizadorgraphik;
+import java_cup.runtime.Symbol;
+import java_cup.runtime.*;
+import java.lang.*;
+import javax.swing.JOptionPane;
+import java.io.*;
+import org.alejandrohernandez.beans.Nodo;
+import java.util.ArrayList;
+import org.alejandrohernandez.beans.Errores;
+import org.alejandrohernandez.manejadores.ManejadorErrores;
+import org.alejandrohernandez.manejadores.TablaSimbolosGraphik;
+parser code
+{:
+
+/**Metodo al que se llama automaticamente ante algun error sintactico.*/
+public void syntax_error(Symbol s){
+        System.out.println("Error en la Linea " + (s.right+1) +" Columna "+s.left+ ". Identificador " +s.value + " no reconocido." );
+}
+  
+
+/**Metodo al que se llama en el momento en que ya no es posible una recuperaci�n de
+errores.*/
+public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
+javax.swing.JOptionPane.showMessageDialog(null,"Error Sintactico en la Linea " + (s.right+1)+ "Columna "+s.left+". Identificador " +
+s.value + " no reconocido.");
+ ManejadorErrores.getInstancia().agregarErrorGraphik(new Errores("Sintaxis no reconocida en el identificador " +s.value, "Sintactico", (s.left+1),(s.right+1),TablaSimbolosGraphik.getInstancia().getArchivo()));
+}
+
+
+:}
+action code
+{:
+    // Espacio que servira para metodos en el lenguaje de java
+    public ArrayList<Nodo> listaIds = new ArrayList<Nodo>();
+ public ArrayList<Nodo> listaDime = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaPar = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaCasos = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaValores = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaIns = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaObj = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaImp = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaLla = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaLlaValor = new ArrayList<Nodo>();
+:}
+
+terminal String interrogacion;
+terminal String pC;
+terminal String coma,punto;
+terminal String asignacion;
+terminal String aP;
+terminal String cP;
+terminal String aC;
+terminal String cC;
+terminal String aL;
+terminal String cL;
+terminal String mas;
+terminal String menos;
+terminal String por;
+terminal String div;
+terminal String pot;
+terminal String and;
+terminal String or,xor,not;
+terminal String igualIgual;
+terminal String menor;
+terminal String mayor;
+terminal String menorIgual;
+terminal String mayorIgual;
+terminal String diferente;
+terminal String publico,privado,protegido,importar,als,var,hereda,nuevo,verdadero,falso,vacio,tipoEntero,tipoDecimal,caracter,tipoBool,si,sino,
+masMas,menosMenos,retornar,llamar,inicio,incluirhk,llamarhk,seleccion,caso,defecto,para,mientras,hacer,continuar,terminar,graphikar,
+imprimir,datos,donde,procesar,dondecada,dondetodo,dosPuntos,entero,decimal,id,archivogk,cadena,tipoCaracter,tipoCadena;
+
+
+non terminal Nodo INICIO, IMPORT,I ,CUERPOGK ,VARIABLESGLO,TIPO, VISIBILIDAD,DEFALS,E,SENT,CUERPOSENT, FUNCIONES,CUERPOALS,LISTAPAR,
+VARIABLESLOCAL,CONTROLES,LLAMARFUN,ARREGLOS,ASIGNACION,FUNNATAS,DATOS,LISTAVAR,PARAENVIAR,IF,SELECCIONA,PARAA,MIENTRASS,HACERR,CASOS,CASOS2,CASOS3,
+SINLOOP,EL,ER,VARPARA,OPPARA,SENTLOPP,CUERPOSENTLOOP,CONTROLESLOOP,IFLOOP,SELECCIONALOOP,CASOSLOOP,CASOS3LOOP,SENTLOOP,DIME, VALORES,INSTANCIA,LLAMAROBJ,
+VALORES2,VALORES3,CUERPOALSRECUR,IMPORTACIONES,LLAMARFUNOBJ,VACIOID;
+
+precedence left or;
+precedence left xor;
+precedence left and;
+precedence right not;
+precedence left menor,mayor,menorIgual,mayorIgual,igualIgual,diferente;
+precedence left mas, menos;
+precedence left por, div; 
+precedence right pot; 
+precedence left masMas, menosMenos;
+
+
+start with INICIO;
+
+INICIO ::= //var als{::};
+            IMPORTACIONES I:I1 {:javax.swing.JOptionPane.showMessageDialog(null,"todo bien  Graphik");Nodo I = new Nodo("INICIO"); Nodo IM = new Nodo("IMPORTACIONES"); for(Nodo nodo1:listaImp){IM.insertarNodo(nodo1);}I.insertarNodo(IM); I.insertarNodo(I1); I.graficarAst(I,"GRAPHIK"); RecoleccionGraphik reco = new RecoleccionGraphik();
+                reco.recoleccion(I);:}
+           |I:I1{:javax.swing.JOptionPane.showMessageDialog(null,"todo bien  Graphik");
+                Nodo I = new Nodo("INICIO"); I.insertarNodo(I1); I.graficarAst(I,"GRAPHIK");
+                RecoleccionGraphik reco = new RecoleccionGraphik();
+                reco.recoleccion(I);
+                
+            :};
+
+IMPORTACIONES ::= IMPORTACIONES IMPORT:I{:listaImp.add(I);:}
+                  |IMPORT:I{:listaImp.clear(); listaImp.add(I);:};  
+
+IMPORT ::= //IMPORT importar:i archivogk:a interrogacion{:listaIds.clear();Nodo IM = new Nodo("IMPORT"); 
+            //                    IM.insertarNodo(new Nodo(i,ileft,iright)); IM.insertarNodo(new Nodo(a,aleft,aright)); listaIds.add(IM);:}
+        //   |IMPORT incluirhk:i id:a interrogacion{:listaIds.clear();Nodo IM = new Nodo("IMPORT"); 
+         //                       IM.insertarNodo(new Nodo(i,ileft,iright)); IM.insertarNodo(new Nodo(a,"id",aleft,aright)); listaIds.add(IM);:}
+           incluirhk:i id:a interrogacion{:listaIds.clear();Nodo IM = new Nodo("IMPORT"); 
+                                IM.insertarNodo(new Nodo(i,ileft,iright)); IM.insertarNodo(new Nodo(a,"id",aleft,aright)); listaIds.add(IM);:}
+           |importar:i archivogk:a interrogacion{:listaIds.clear();Nodo IM = new Nodo("IMPORT"); 
+                                IM.insertarNodo(new Nodo(i,ileft,iright)); IM.insertarNodo(new Nodo(a,aleft,aright)); listaIds.add(IM);:};
+
+I::= I:I1 CUERPOGK:C{:Nodo I = new Nodo("I"); I.insertarNodo(I1); I.insertarNodo(C); RESULT = I;:}
+    |CUERPOGK:C{:Nodo I = new Nodo("I"); I.insertarNodo(C); RESULT = I;:};
+
+CUERPOGK::= //VARIABLESGLO:V interrogacion{:Nodo C= new Nodo("CUERPOGK"); C.insertarNodo(V); RESULT = C;:}
+            //|INSTANCIA:I interrogacion{:Nodo C= new Nodo("CUERPOGK"); C.insertarNodo(I); RESULT = C;:}
+            DEFALS:D{:Nodo C= new Nodo("CUERPOGK"); C.insertarNodo(D); RESULT = C;:};
+            //|ARREGLOS:V interrogacion{:Nodo C= new Nodo("CUERPOGK"); C.insertarNodo(V); RESULT = C;:};
+
+VARIABLESGLO ::=var TIPO:T id:i asignacion E:E{:Nodo V = new Nodo("VARIABLESGLO"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                V.insertarNodo(E);
+                                                                RESULT = V;
+                                                                :}
+                |var TIPO:T id:i{:Nodo V = new Nodo("VARIABLESGLO"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                RESULT = V;
+                                                                :}
+                |var TIPO:T id:i dosPuntos VISIBILIDAD:V1{:Nodo V = new Nodo("VARIABLESGLO"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                V.insertarNodo(V1); 
+                                                                RESULT = V;:}
+                |var TIPO:T id:i dosPuntos VISIBILIDAD:V1 asignacion E:E{:
+                                                                Nodo V = new Nodo("VARIABLESGLO"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                V.insertarNodo(V1); 
+                                                                V.insertarNodo(E);
+                                                                RESULT = V;
+                                                                :};
+                
+                                                                
+VISIBILIDAD ::= publico:p{:Nodo V = new Nodo("VISIBILIDAD"); V.insertarNodo(new Nodo(p,pleft,pright)); RESULT = V;:}
+               |protegido:p{:Nodo V = new Nodo("VISIBILIDAD"); V.insertarNodo(new Nodo(p,pleft,pright)); RESULT = V;:}
+               |privado:p{:Nodo V = new Nodo("VISIBILIDAD"); V.insertarNodo(new Nodo(p,pleft,pright)); RESULT = V;:};
+
+TIPO ::= tipoEntero:t{:RESULT = new Nodo(t,tleft,tright);:}
+        |tipoDecimal:t{:RESULT = new Nodo(t,tleft,tright);:}
+        |tipoCaracter:t{:RESULT = new Nodo(t,tleft,tright);:}
+        |tipoBool:t{:RESULT = new Nodo(t,tleft,tright);:}
+        |tipoCadena:t{:RESULT = new Nodo(t,tleft,tright);:};
+       // |als:t{:RESULT = new Nodo(t,tleft,tright);:};
+
+DEFALS::= als id:i dosPuntos VISIBILIDAD:V aL CUERPOALSRECUR:CA cL{:Nodo DA = new Nodo("DEFALS"); DA.insertarNodo(new Nodo(i,"id",ileft,iright)); DA.insertarNodo(V); DA.insertarNodo(CA); RESULT = DA;:}
+        |als id:i dosPuntos VISIBILIDAD:V hereda id:h aL CUERPOALSRECUR:CA cL{:Nodo DA = new Nodo("DEFALS"); DA.insertarNodo(new Nodo(i,"id",ileft,iright)); DA.insertarNodo(V); DA.insertarNodo(new Nodo(h,hleft,hright)); DA.insertarNodo(CA); RESULT = DA;:}
+        |als id:i hereda id:h aL CUERPOALSRECUR:CA cL{:Nodo DA = new Nodo("DEFALS"); DA.insertarNodo(new Nodo(i,"id",ileft,iright));  DA.insertarNodo(new Nodo(h,hleft,hright)); DA.insertarNodo(CA); RESULT = DA;:}
+        |als id:i aL CUERPOALSRECUR:CA cL{:Nodo DA = new Nodo("DEFALS"); DA.insertarNodo(new Nodo(i,"id",ileft,iright)); DA.insertarNodo(CA); RESULT = DA;:};
+
+CUERPOALSRECUR ::= CUERPOALSRECUR:CA1 CUERPOALS:CA{:Nodo C = new Nodo("CUERPOALSRECUR"); C.insertarNodo(CA1); C.insertarNodo(CA); RESULT = C;:}
+                   |CUERPOALS:CA{:Nodo C = new Nodo("CUERPOALSRECUR"); C.insertarNodo(CA); RESULT = C;:};
+
+CUERPOALS::= VARIABLESGLO:V interrogacion{:Nodo C= new Nodo("CUERPOALS"); C.insertarNodo(V); RESULT = C;:}
+            |FUNCIONES:F {:Nodo C= new Nodo("CUERPOALS"); C.insertarNodo(F); RESULT = C;:}
+            |INSTANCIA:I interrogacion{:Nodo C= new Nodo("CUERPOALS"); C.insertarNodo(I); RESULT = C;:}
+            |ARREGLOS:A interrogacion{:Nodo CF = new Nodo("CUERPOALS"); CF.insertarNodo(A);RESULT =CF;:};
+
+FUNCIONES ::= TIPO:T id:i aP LISTAPAR cP aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(T); F.insertarNodo(new Nodo(i,"id",ileft,iright));Nodo LP = new Nodo("LISTAPAR");for (Nodo nodo1 : listaPar) {LP.insertarNodo(nodo1);}                         F.insertarNodo(LP); F.insertarNodo(S); RESULT =F;:}
+             |TIPO:T id:i aP LISTAPAR cP dosPuntos VISIBILIDAD:V aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(T); F.insertarNodo(new Nodo(i,"id",ileft,iright)); Nodo LP = new Nodo("LISTAPAR");for (Nodo nodo1 : listaPar) {LP.insertarNodo(nodo1);} F.insertarNodo(LP); F.insertarNodo(V);  F.insertarNodo(S); RESULT =F;:}
+             |TIPO:T id:i aP cP aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(T); F.insertarNodo(new Nodo(i,"id",ileft,iright));  F.insertarNodo(S);RESULT =F;:}
+             |TIPO:T id:i aP cP dosPuntos VISIBILIDAD:V aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(T); F.insertarNodo(new Nodo(i,"id",ileft,iright)); F.insertarNodo(V); F.insertarNodo(S);RESULT =F;:}
+             |VACIOID:v id:i aP LISTAPAR cP aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(v); F.insertarNodo(new Nodo(i,"id",ileft,iright));Nodo LP = new Nodo("LISTAPAR");for (Nodo nodo1 : listaPar) {LP.insertarNodo(nodo1);}  F.insertarNodo(LP);  F.insertarNodo(S); RESULT =F;:}
+             |VACIOID:v id:i aP LISTAPAR cP dosPuntos VISIBILIDAD:V aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(v); F.insertarNodo(new Nodo(i,"id",ileft,iright)); Nodo LP = new Nodo("LISTAPAR");for (Nodo nodo1 : listaPar) {LP.insertarNodo(nodo1);} F.insertarNodo(LP); F.insertarNodo(V); F.insertarNodo(S);RESULT =F;:}
+             |VACIOID:v id:i aP cP aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(v); F.insertarNodo(new Nodo(i,"id",ileft,iright));  F.insertarNodo(S);RESULT =F;:}
+             |VACIOID:v id:i aP cP dosPuntos VISIBILIDAD:V aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(v); F.insertarNodo(new Nodo(i,"id",ileft,iright)); F.insertarNodo(V); F.insertarNodo(S);RESULT =F;:}
+             |vacio:v inicio:i aP cP aL SENT:S cL {:Nodo F = new Nodo("FUNCIONES"); F.insertarNodo(new Nodo(i,"id",ileft,iright)); F.insertarNodo(S); RESULT =F;:};
+
+VACIOID::= vacio:i{:RESULT = new Nodo(i,"vacio",ileft,iright);:}
+          |id:i{:RESULT = new Nodo(i,"id",ileft,iright);:};
+
+LISTAPAR::= LISTAPAR coma TIPO:T id:i{:Nodo LP =  new Nodo("LISTAPAR"); LP.insertarNodo(T); LP.insertarNodo(new Nodo(i,"id",ileft,iright)); listaPar.add(LP);:}
+           |TIPO:T id:i{:listaPar.clear(); Nodo LP =  new Nodo("LISTAPAR"); LP.insertarNodo(T); LP.insertarNodo(new Nodo(i,"id",ileft,iright)); listaPar.add(LP);:};
+
+INSTANCIA ::= var id:i id:i2 dosPuntos VISIBILIDAD:V  asignacion nuevo:n id:i3 aP cP{:Nodo I = new Nodo("INSTANCIA"); I.insertarNodo(new Nodo(i,"id",ileft,iright));I.insertarNodo(new Nodo(i2,"id",i2left,i2right)); I.insertarNodo(V); I.insertarNodo(new Nodo(n,nleft,nright)); I.insertarNodo(new Nodo(i3,"id",i3left,i3right));RESULT = I;:}
+             |var id:i id:i2  asignacion nuevo:n id:i3 aP cP{:Nodo I = new Nodo("INSTANCIA"); I.insertarNodo(new Nodo(i,"id",ileft,iright));I.insertarNodo(new Nodo(i2,"id",i2left,i2right)); I.insertarNodo(new Nodo(n,nleft,nright)); I.insertarNodo(new Nodo(i3,"id",i3left,i3right)); RESULT = I;:}
+             |var id:i id:i2 dosPuntos VISIBILIDAD:V{:Nodo I = new Nodo("INSTANCIA"); I.insertarNodo(new Nodo(i,"id",ileft,iright));I.insertarNodo(new Nodo(i2,"id",i2left,i2right)); I.insertarNodo(V); RESULT = I;:}
+             |var id:i id:i2 {:Nodo I = new Nodo("INSTANCIA"); I.insertarNodo(new Nodo(i,"id",ileft,iright));I.insertarNodo(new Nodo(i2,"id",i2left,i2right)); RESULT = I;:} ;
+
+
+SENT ::= SENT:S1 CUERPOSENT:C{:Nodo S=new Nodo("SENT"); S.insertarNodo(S1); S.insertarNodo(C); RESULT = S;:}
+        |CUERPOSENT:C{:Nodo S=new Nodo("SENT"); S.insertarNodo(C); RESULT = S;:};
+
+CUERPOSENT ::=SINLOOP:SL{:Nodo CF = new Nodo("CUERPOSENT"); CF.insertarNodo(SL); RESULT =CF;:}
+            |CONTROLES:C{:Nodo CF = new Nodo("CUERPOSENT"); CF.insertarNodo(C);RESULT =CF;:};
+            
+
+SINLOOP::=VARIABLESLOCAL:V interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(V);RESULT =CF;:}
+         |LLAMARFUN:LLF interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(LLF);RESULT =CF;:}
+         |ARREGLOS:A interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(A);RESULT =CF;:}
+         |ASIGNACION:A interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(A);RESULT =CF;:}
+         |FUNNATAS:FN interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(FN);RESULT =CF;:}
+      // |DATOS:D{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(D);RESULT =CF;:}
+         |retornar:i interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(new Nodo(i,"id",ileft,iright));RESULT =CF;:}
+         |retornar:i E:E interrogacion{:Nodo CF = new Nodo("SINLOOP"); CF.insertarNodo(new Nodo(i,"id",ileft,iright)); CF.insertarNodo(E); RESULT =CF;:}
+         |INSTANCIA:I interrogacion{:Nodo C= new Nodo("SINLOOP"); C.insertarNodo(I); RESULT = C;:};
+
+FUNNATAS::= graphikar:i aP E:E cP{:Nodo F = new Nodo("FUNNATAS"); F.insertarNodo(new Nodo(i,ileft,iright)); F.insertarNodo(E); RESULT = F;:} 
+           |imprimir:i aP E:E cP{:Nodo F = new Nodo("FUNNATAS"); F.insertarNodo(new Nodo(i,ileft,iright)); F.insertarNodo(E); RESULT = F;:}
+           |llamarhk:i id:i2 aP cP{:Nodo F = new Nodo("FUNNATAS"); F.insertarNodo(new Nodo(i,ileft,iright)); F.insertarNodo(new Nodo(i2,i2left,i2right));RESULT = F;:}
+           |llamarhk:i id:i2 aP PARAENVIAR cP{:Nodo F = new Nodo("FUNNATAS"); F.insertarNodo(new Nodo(i,ileft,iright)); F.insertarNodo(new Nodo(i2,i2left,i2right)); Nodo LP = new Nodo("PARAENVIAR");for (Nodo nodo1 : listaValores) {LP.insertarNodo(nodo1);} F.insertarNodo(LP); RESULT = F;:};
+
+VARIABLESLOCAL::=var TIPO:T id:i asignacion E:E{:Nodo V = new Nodo("VARIABLESLOCAL"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright));
+                                                                
+                                                                V.insertarNodo(E);
+                                                                RESULT = V;
+                                                                :}
+                |var TIPO:T LISTAVAR{:Nodo V = new Nodo("VARIABLESLOCAL"); 
+                                                                V.insertarNodo(T); 
+                                                                Nodo LV =  new Nodo("LISTAVAR");
+                                                                for(Nodo nodo1: listaIds){
+                                                                    LV.insertarNodo(nodo1);
+                                                                }
+                                                                V.insertarNodo(LV);
+                                                                RESULT = V;
+                                                                :};
+
+LISTAVAR::= LISTAVAR coma id:i{:listaIds.add(new Nodo(i,"id",ileft,iright));:}
+            |id:i{:listaIds.clear(); listaIds.add(new Nodo(i,"id",ileft,iright));:};
+
+LLAMARFUN::=llamar LLAMAROBJ{:Nodo LF = new Nodo("LLAMARFUN"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);} LF.insertarNodo(I); RESULT = LF;:};
+            //|llamar LLAMAROBJ{:Nodo LF = new Nodo("LLAMARFUN"); LF.insertarNodo(new Nodo(i,"id",ileft,iright)); RESULT = LF;:};
+
+PARAENVIAR::= PARAENVIAR coma E:E{:listaValores.add(E);:}
+            |E:E{:listaValores.clear(); listaValores.add(E);:};
+
+CONTROLES::= IF:I{:RESULT = I;:}
+            |SELECCIONA:S{:RESULT = S;:}
+            |PARAA:P{:RESULT = P;:}
+            |MIENTRASS:M{:RESULT = M;:}
+            |HACERR:H{:RESULT = H;:};
+
+ASIGNACION ::= LLAMAROBJ{:Nodo A = new Nodo("ASIGNACION"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}A.insertarNodo(I); RESULT =A; :} asignacion E:E{: RESULT.insertarNodo(E); RESULT = RESULT;:}
+               |LLAMAROBJ masMas:i{:Nodo A = new Nodo("ASIGNACION"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}A.insertarNodo(I); A.insertarNodo(new Nodo(i,ileft,iright));  RESULT =A;:}
+               |LLAMAROBJ menosMenos:i{:Nodo A = new Nodo("ASIGNACION"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}A.insertarNodo(I); A.insertarNodo(new Nodo(i,ileft,iright));  RESULT =A;:}
+               |LLAMAROBJ DIME {:Nodo A = new Nodo("ASIGNACION"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}A.insertarNodo(I);  Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                A.insertarNodo(D); RESULT =A; :}asignacion E:E{: RESULT.insertarNodo(E); RESULT = RESULT;:};
+
+IF ::= si:i aP E:E cP aL SENT:CS cL {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); RESULT= I;:} 
+       |si:i aP E:E cP aL SENT:CS cL sino:s aL SENT:CS1 cL {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); I.insertarNodo(new Nodo(s,sleft,sright));I.insertarNodo(CS1); RESULT= I;:}
+       |si:i aP E:E cP aL cL {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); RESULT= I;:}
+       |si:i aP E:E cP aL cL sino:s aL SENT:CS1 cL {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(new Nodo(s,sleft,sright));I.insertarNodo(CS1); RESULT= I;:} 
+       |si:i aP E:E cP aL SENT:CS cL sino:s aL cL {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); I.insertarNodo(new Nodo(s,sleft,sright)); RESULT= I;:} ;
+
+SELECCIONA::= seleccion:i aP E:E cP aL CASOS cL{:Nodo S = new Nodo("SELECCIONA"); S.insertarNodo(new Nodo(i,ileft,iright)); S.insertarNodo(E); Nodo C = new Nodo("CASOS"); for(Nodo nodo1: listaCasos){C.insertarNodo(nodo1);} S.insertarNodo(C);RESULT = S;:}
+              |seleccion:i aP E:E cP aL CASOS defecto dosPuntos SENT:S1 cL {:Nodo S = new Nodo("SELECCIONA"); S.insertarNodo(new Nodo(i,ileft,iright));S.insertarNodo(E); Nodo C = new Nodo("CASOS"); for(Nodo nodo1: listaCasos){C.insertarNodo(nodo1);} S.insertarNodo(C); S.insertarNodo(S1); RESULT = S;:};
+
+CASOS ::= CASOS CASOS3:C{: listaCasos.add(C);:}
+        |CASOS3:C{:listaCasos.clear(); listaCasos.add(C);:};
+
+CASOS3::= caso entero:i dosPuntos SENT:S{:Nodo CA = new Nodo("CASOS3"); CA.insertarNodo(new Nodo(i,"entero",ileft,iright)); CA.insertarNodo(S); RESULT = CA;:}
+        |caso cadena:i dosPuntos SENT:S {:Nodo CA = new Nodo("CASOS3"); CA.insertarNodo(new Nodo(i,"cadena",ileft,iright)); CA.insertarNodo(S); RESULT = CA;:};
+
+PARAA::= para:i aP  VARPARA:VP dosPuntos E:E dosPuntos E:OP cP aL SENTLOOP:S cL{:Nodo P = new Nodo("PARAA"); P.insertarNodo(new Nodo(i,ileft,iright));
+                                                                            P.insertarNodo(VP);
+                                                                            P.insertarNodo(E);
+                                                                            P.insertarNodo(OP);
+                                                                            P.insertarNodo(S);
+                                                                            RESULT = P;
+                                                                            :};
+
+VARPARA::= tipoEntero:e  id:i asignacion E:E{:Nodo VP = new Nodo("VARPARA"); VP.insertarNodo(new Nodo(e,eleft,eright)); VP.insertarNodo(new Nodo(i,"id",ileft,iright)); VP.insertarNodo(E); RESULT=VP;:}
+        | LLAMAROBJ:i asignacion E:E{:Nodo VP = new Nodo("VARPARA"); VP.insertarNodo(i); VP.insertarNodo(E); RESULT=VP;:};
+
+//OPPARA ::= masMas:e{:Nodo OP = new Nodo("OPPARA"); OP.insertarNodo(new Nodo(e,eleft,eright)); RESULT = OP;:}
+ //            |menosMenos:e{:Nodo OP = new Nodo("OPPARA"); OP.insertarNodo(new Nodo(e,eleft,eright)); RESULT = OP;:};
+
+HACERR ::= hacer:i aL SENTLOOP:S cL mientras aP E:E2 cP interrogacion{:Nodo H = new Nodo("HACER"); H.insertarNodo(new Nodo(i,ileft,iright)); H.insertarNodo(S); H.insertarNodo(E2); RESULT = H;:}
+       | hacer:i aL cL mientras aP E:E2 cP interrogacion;
+
+MIENTRASS ::= mientras:i aP E:E1 cP aL SENTLOOP:S cL{:Nodo H = new Nodo("MIENTRAS"); H.insertarNodo(new Nodo(i,ileft,iright));H.insertarNodo(E1); H.insertarNodo(S); RESULT = H;:}
+           |mientras:i aP E:E1 cP aL  cL;
+
+SENTLOOP::=SENTLOOP:S1 CUERPOSENTLOOP:C{:Nodo S=new Nodo("SENTLOOP"); S.insertarNodo(S1); S.insertarNodo(C); RESULT = S;:}
+          |CUERPOSENTLOOP:C{:Nodo S=new Nodo("SENTLOOP");S.insertarNodo(C); RESULT = S;:};
+
+CUERPOSENTLOOP::= SINLOOP:SL{:Nodo CF = new Nodo("CUERPOSENTLOOP"); CF.insertarNodo(SL); RESULT =CF;:}
+                 |CONTROLESLOOP:C{:Nodo CF = new Nodo("CUERPOSENTLOOP"); CF.insertarNodo(C); RESULT =CF;:}
+                 |continuar:i interrogacion{:Nodo CF = new Nodo("CUERPOSENTLOOP"); CF.insertarNodo(new Nodo(i,"id",ileft,iright));RESULT =CF;:}
+                 |terminar:i interrogacion{:Nodo CF = new Nodo("CUERPOSENTLOOP"); CF.insertarNodo(new Nodo(i,"id",ileft,iright));RESULT =CF;:};
+
+CONTROLESLOOP::=IFLOOP:I{:RESULT = I;:}
+            |SELECCIONALOOP:S{:RESULT = S;:}
+            |PARAA:P{:RESULT = P;:}
+            |MIENTRASS:M{:RESULT = M;:}
+           |HACERR:H{:RESULT = H;:};
+
+IFLOOP ::= si:i aP E:E cP aL SENTLOOP:CS cL {:Nodo I = new Nodo("IFLOOP"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); RESULT= I;:} 
+       |si:i aP E:E cP aL SENTLOOP:CS cL sino aL SENTLOOP:CS1 cL {:Nodo I = new Nodo("IFLOOP"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); I.insertarNodo(CS1); RESULT= I;:}
+       |si:i aP E:E cP aL cL {:Nodo I = new Nodo("IFLOOP"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); RESULT= I;:}
+       |si:i aP E:E cP aL cL sino aL SENTLOOP:CS1 cL {:Nodo I = new Nodo("IFLOOP"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS1); RESULT= I;:} 
+       |si:i aP E:E cP aL SENTLOOP:CS cL sino:s aL cL {:Nodo I = new Nodo("IFLOOP"); I.insertarNodo(new Nodo(i,ileft,iright)); I.insertarNodo(E); I.insertarNodo(CS); I.insertarNodo(new Nodo(s,sleft,sright)); RESULT= I;:} ;
+
+SELECCIONALOOP::= seleccion:i aP E:E cP aL CASOSLOOP cL{:Nodo S = new Nodo("SELECCIONALOOP"); S.insertarNodo(new Nodo(i,ileft,iright)); S.insertarNodo(E); Nodo C = new Nodo("CASOSLOOP"); for(Nodo nodo1: listaCasos){C.insertarNodo(nodo1); S.insertarNodo(C);RESULT = S;}:}
+              |seleccion:i aP E:E cP aL CASOSLOOP  defecto dosPuntos SENTLOOP:S1 cL {:Nodo S = new Nodo("SELECCIONALOOP"); S.insertarNodo(new Nodo(i,ileft,iright));S.insertarNodo(E); Nodo C = new Nodo("CASOSLOOP"); for(Nodo nodo1: listaCasos){C.insertarNodo(nodo1); S.insertarNodo(C); S.insertarNodo(S1); RESULT = S;}:};
+
+CASOSLOOP ::= CASOSLOOP CASOS3LOOP:C{: listaCasos.add(C);:}
+        |CASOS3LOOP:C{:listaCasos.clear(); listaCasos.add(C);:};
+
+CASOS3LOOP::= caso entero:i dosPuntos SENTLOOP:S{:Nodo CA = new Nodo("CASOS3LOOP"); CA.insertarNodo(new Nodo(i,"entero",ileft,iright)); CA.insertarNodo(S); RESULT = CA;:}
+        |caso cadena:i dosPuntos SENTLOOP:S{:Nodo CA = new Nodo("CASOS3LOOP"); CA.insertarNodo(new Nodo(i,"cadena",ileft,iright)); CA.insertarNodo(S); RESULT = CA;:};
+
+ARREGLOS ::= var TIPO:T id:i DIME dosPuntos VISIBILIDAD:V1{:Nodo V = new Nodo("ARREGLOS"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                V.insertarNodo(D);
+                                                                V.insertarNodo(V1);
+                                                                RESULT = V;:} 
+            |var TIPO:T id:i DIME{:Nodo V = new Nodo("ARREGLOS"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright));
+                                                                Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                V.insertarNodo(D);
+                                                                RESULT = V;:}
+            |var TIPO:T id:i DIME dosPuntos VISIBILIDAD:V1 asignacion VALORES:VAL{:Nodo V = new Nodo("ARREGLOS"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                V.insertarNodo(D);
+                                                                V.insertarNodo(V1);
+                                                                V.insertarNodo(VAL);
+                                                                RESULT = V;:} 
+            |var TIPO:T id:i DIME asignacion VALORES:V1{:Nodo V = new Nodo("ARREGLOS"); 
+                                                                V.insertarNodo(T); 
+                                                                V.insertarNodo(new Nodo(i,"id",ileft,iright)); 
+                                                                Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                V.insertarNodo(D);
+                                                                V.insertarNodo(V1);
+                                                                RESULT = V;:};
+
+DIME ::= DIME aC E:E cC{:listaDime.add(E);:}
+         |DIME aC cC{: listaDime.add(new Nodo("UNA"));:}
+         |aC E:E cC{:listaDime.clear(); listaDime.add(E);:}
+         |aC cC{:listaDime.clear(); listaDime.add(new Nodo("UNA"));:};
+
+VALORES::={:listaLlaValor.clear();:}aL VALORES2 cL {:Nodo VA = new Nodo("VALORES"); for(Nodo nodo1: listaLlaValor){
+                                                                    VA.insertarNodo(nodo1);
+                                                                } RESULT = VA;:};
+
+VALORES2::=VALORES2:V1 coma VALORES3:V3{:/*Nodo V2 =new Nodo("VALORES2"); V2.insertarNodo(V1); V2.insertarNodo(V3); RESULT = V2;*/:}
+           |VALORES3:V3{:/*Nodo V2 =new Nodo("VALORES2"); V2.insertarNodo(V3); RESULT = V3;*/:};
+
+VALORES3::=aL VALORES2:V2 cL{:/*Nodo V3 =new Nodo("VALORES3"); V3.insertarNodo(V2);RESULT = V2;*/:}
+           |E:E{:/*Nodo V3 =new Nodo("VALORES3"); V3.insertarNodo(E); RESULT =V3;*/ listaLlaValor.add(E);:};
+
+
+
+
+E ::= E:E1 mas:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 menos:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 por:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 div:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 pot:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 menor:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 mayor:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 menorIgual:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 mayorIgual:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 diferente:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 igualIgual:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 and:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 or:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |E:E1 xor:o E:E2 {:Nodo E = new Nodo("E"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |not:o E:E1 {:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(o,oleft,oright)); E.insertarNodo(E1); RESULT=E;:}
+        |LLAMAROBJ masMas:o {:Nodo E = new Nodo("E"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}E.insertarNodo(I); E.insertarNodo(new Nodo(o,oleft,oright));  RESULT=E;:}
+        |LLAMAROBJ menosMenos:o {:Nodo E = new Nodo("E"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}E.insertarNodo(I); E.insertarNodo(new Nodo(o,oleft,oright));  RESULT=E;:}
+        |LLAMAROBJ DIME{:Nodo A = new Nodo("E"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}A.insertarNodo(I);  Nodo D = new Nodo("DIME");
+                                                                for(Nodo nodo1: listaDime){
+                                                                    D.insertarNodo(nodo1);
+                                                                }
+                                                                A.insertarNodo(D); RESULT =A;:}
+        |menos:o E:E1 {:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(o,oleft,oright)); E.insertarNodo(E1); RESULT=E;:}
+        |aP:ap E:E1 cP:cp {:Nodo E = new Nodo("E");  E.insertarNodo(new Nodo(ap,apleft,apright));  E.insertarNodo(E1); E.insertarNodo(new Nodo(cp,cpleft,cpright));RESULT=E;:}
+        |entero:e{:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(e,"entero",eleft,eright)); RESULT = E;:}
+        |decimal:d{:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(d,"decimal",dleft,dright)); RESULT = E;:}
+        |caracter:c{:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(c,"caracter",cleft,cright)); RESULT = E;:}
+        |cadena:c{:Nodo E = new Nodo("E"); E.insertarNodo(new Nodo(c,"cadena",cleft,cright)); RESULT = E;:}
+      //  |id:id {:Nodo E = new Nodo("E");E.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT = E;:}
+        |LLAMARFUN:L{:Nodo E = new Nodo("E"); E.insertarNodo(L); RESULT = E;:}
+        |LLAMAROBJ{:Nodo E = new Nodo("E"); Nodo I = new Nodo("LLAMAROBJ"); for(Nodo nodo1: listaObj){I.insertarNodo(nodo1);}E.insertarNodo(I); RESULT = E;:}
+        |falso:id{:Nodo E = new Nodo("E");E.insertarNodo(new Nodo(id,"bool",idleft,idright)); RESULT = E;:}
+        |verdadero:id{:Nodo E = new Nodo("E");E.insertarNodo(new Nodo(id,"bool",idleft,idright)); RESULT = E;:};
+        //|id:id DIME{:Nodo E = new Nodo("E");E.insertarNodo(new Nodo(id,"id",idleft,idright));Nodo D = new Nodo("DIME"); for(Nodo nodo1: listaDime){D.insertarNodo(nodo1);} E.insertarNodo(D); RESULT = E;:};
+
+
+LLAMAROBJ::=  LLAMAROBJ punto LLAMARFUNOBJ:L{:listaObj.add(L);:}
+            |LLAMARFUNOBJ:L{:listaObj.clear();listaObj.add(L);:};
+            
+
+LLAMARFUNOBJ ::=id:id aP PARAENVIAR cP{:Nodo LF = new Nodo("LLAMARFUNOBJ"); LF.insertarNodo(new Nodo(id,"id",idleft,idright)); Nodo LP = new Nodo("PARAENVIAR");for (Nodo nodo1 : listaValores) {LP.insertarNodo(nodo1);} LF.insertarNodo(LP); RESULT = LF;:}
+               |id:id aP:aP cP:cP {:Nodo LF = new Nodo("LLAMARFUNOBJ"); LF.insertarNodo(new Nodo(id,"id",idleft,idright)); LF.insertarNodo(new Nodo("sinparametros")); RESULT = LF;:}
+               |id:id{:Nodo LF = new Nodo("LLAMARFUNOBJ"); LF.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT = LF;:};

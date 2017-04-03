@@ -1,0 +1,380 @@
+
+package org.alejandrohernandez.analizadorHaskell;
+import java_cup.runtime.Symbol;
+import java_cup.runtime.*;
+import java.lang.*;
+import javax.swing.JOptionPane;
+import java.io.*;
+import org.alejandrohernandez.beans.Nodo;
+import java.util.ArrayList;
+import org.alejandrohernandez.beans.Errores;
+import org.alejandrohernandez.manejadores.ManejadorErrores;
+import org.alejandrohernandez.manejadores.TablaSimbolosHaskell;
+parser code
+{:
+
+/**Metodo al que se llama automaticamente ante algun error sintactico.*/
+public void syntax_error(Symbol s){
+        System.out.println("Error en la Linea " + (s.right+1) +" Columna "+s.left+ ". Identificador " +s.value + " no reconocido." );
+}
+  
+
+/**Metodo al que se llama en el momento en que ya no es posible una recuperaci�n de
+errores.*/
+public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
+javax.swing.JOptionPane.showMessageDialog(null,"Error Sintactico en la Linea " + (s.right+1)+ "Columna "+s.left+". Identificador " +
+s.value + " no reconocido.");
+ ManejadorErrores.getInstancia().agregarErrorHaskell(new Errores("Sintaxis no reconocida en el identificador " +s.value, "Sintactico", (s.left+1),(s.right+1),TablaSimbolosHaskell.getInstancia().getArchivo()));
+}
+
+
+:}
+action code
+{:
+    // Espacio que servira para metodos en el lenguaje de java
+    public ArrayList<Nodo> listaIds = new ArrayList<Nodo>();
+ public ArrayList<Nodo> dimen = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaPar = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaCasos = new ArrayList<Nodo>();
+public ArrayList<Nodo> listaValores = new ArrayList<Nodo>();
+:}
+
+terminal String dollar;
+terminal String pC;
+terminal String coma;
+terminal String asignacion;
+terminal String aP;
+terminal String cP;
+terminal String aC;
+terminal String cC;
+terminal String aL;
+terminal String cL;
+terminal String mas;
+terminal String menos;
+terminal String por;
+terminal String div;
+terminal String mod;
+terminal String sqrt;
+terminal String pot;
+terminal String and;
+terminal String or;
+terminal String igualIgual;
+terminal String menor;
+terminal String mayor;
+terminal String menorIgual;
+terminal String mayorIgual;
+terminal String diferente;
+terminal String let;
+terminal String masMas;
+terminal String indiceLista;
+terminal String succ;
+terminal String calcular;
+terminal String porcentaje;
+terminal String decc;
+terminal String min;
+terminal String max;
+terminal String sum;
+terminal String product;
+terminal String revers;
+terminal String impr;
+terminal String par;
+terminal String asc;
+terminal String desc;
+terminal String tamanio;
+terminal String si;
+terminal String then;
+terminal String sino;
+terminal String caso;
+terminal String dosPuntos;
+terminal String fin;
+terminal String comentarioMultilinea;
+terminal String comentariolinea;
+terminal String entero;
+terminal String id;
+terminal String decimal;
+terminal String cadena;
+terminal String caracter;
+
+
+non terminal Nodo INICIO, I, SENT, FUNCIONES, LLAMADAS, LISTAS, INDICELISTA, LIST,LISTAPARAMETROS,INS,INSTRUCCIONES,IF,CASE,EXP,EXPR,EXPL,CASOS,CASOS2,VALORES,
+PARAMETROS, DIME, OPLISTAS, LIST2, IL, LLAMARINDICE, LLAMARFUN,LLAMADASNETAS,DIME2,EXP2;
+
+precedence left or,masMas;
+precedence left and;
+precedence left menor,mayor,menorIgual,mayorIgual,igualIgual,diferente;
+precedence left mas, menos;
+precedence left por, div,mod; 
+precedence right pot,sqrt; 
+
+start with INICIO;
+
+INICIO ::= I:I{:javax.swing.JOptionPane.showMessageDialog(null,"todo bien");
+            Nodo INICIO = new Nodo("INICIO");
+            INICIO.insertarNodo(I);
+            RESULT = INICIO;
+            INICIO.graficarAst(I,"HASKELL");
+            EjecucionHaskell eje = new EjecucionHaskell();
+            eje.ejecucion(I);
+            :};
+     //      |cadena:cad{:javax.swing.JOptionPane.showMessageDialog(null,"columna: " + (cadleft+1) + " fila: " + (cadright+1));:};
+     
+
+I ::= I:I2 SENT:S {:
+                    Nodo I = new Nodo("I"); 
+                    I.insertarNodo(I2); 
+                    I.insertarNodo(S);
+                    RESULT = I;
+                  :}
+      |SENT:S{:
+                Nodo I = new Nodo("I");
+                I.insertarNodo(S);
+                RESULT = I;
+             :};
+
+SENT ::= FUNCIONES:FUN{:Nodo SENT = new Nodo("SENT"); SENT.insertarNodo(FUN); RESULT = SENT;:}
+        |LLAMADAS:LLA {:Nodo SENT = new Nodo("SENT"); SENT.insertarNodo(LLA); RESULT = SENT;:} 
+        |INDICELISTA:IL {:Nodo SENT = new Nodo("SENT"); SENT.insertarNodo(IL); RESULT = SENT;:}
+        | dollar let:let id:id asignacion DIME:DIME dollar    {:Nodo INS = new Nodo("SENT"); INS.insertarNodo(new Nodo("let",letleft,letright)); INS.insertarNodo(new Nodo(id,"id",idleft,idright)); INS.insertarNodo(DIME); RESULT = INS;:}
+        | OPLISTAS:OL  {:Nodo INS = new Nodo("SENT"); INS.insertarNodo(OL); RESULT = INS;:};
+
+FUNCIONES ::= id:id LISTAPARAMETROS asignacion INS:INS fin {:
+                                                    Nodo FUNCIONES = new Nodo("FUNCIONES");
+                                                    FUNCIONES.insertarNodo(new Nodo(id,"id",idleft,idright));
+                                                    Nodo LP =new Nodo("LISTAPARAMETROS");
+                                                    for (Nodo nodo1 : listaIds) {
+                                                        LP.insertarNodo(nodo1);
+                                                    }
+                                                    listaIds.clear();
+                                                    FUNCIONES.insertarNodo(LP);
+                                                    FUNCIONES.insertarNodo(INS);
+                                                    RESULT = FUNCIONES;
+                                                    :};
+
+//concatenacion de listas hay que tomar en cuenta que se hara tambien con funciones
+
+LISTAPARAMETROS ::= LISTAPARAMETROS:LP2 coma id:i {:
+                                                       /* Nodo LP = new Nodo("LISTAPARAMETROS"); 
+                                                        LP.insertarNodo(LP2);
+                                                        LP.insertarNodo(new Nodo(i,"id",ileft,iright));
+                                                        RESULT = LP;*/
+                                                        listaIds.add(new Nodo(i,"id",ileft,iright));
+                                                    :}
+                    |id:id {:
+                            /*Nodo LP = new Nodo("LISTAPARAMETROS"); 
+                            LP.insertarNodo(new Nodo(id,"id",idleft,idright));*/
+                            listaIds.clear();
+                            listaIds.add(new Nodo(id,"id",idleft,idright));
+                            :};
+
+INS ::= INS:INS2 INSTRUCCIONES:INS3 {:
+                            Nodo INS = new Nodo("INS");
+                            INS.insertarNodo(INS2);
+                            INS.insertarNodo(INS3);
+                            RESULT = INS;
+                          :}
+        |INSTRUCCIONES:INS1{:
+                        Nodo INS = new Nodo("INS");
+                        INS.insertarNodo(INS1);
+                            RESULT = INS;
+                        :};
+
+INSTRUCCIONES ::= dollar LLAMADAS:LL dollar {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(LL); RESULT = INS;:}
+                |IF:I {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(I); RESULT = INS;:}
+                |CASE:CAS {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(CAS); RESULT = INS;:}
+                |dollar let:let id:id asignacion DIME:DIME dollar    {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(new Nodo("let",letleft,letright)); INS.insertarNodo(new Nodo(id,"id",idleft,idright)); INS.insertarNodo(DIME); RESULT = INS;:}
+                |dollar OPLISTAS:OL dollar {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(OL); RESULT = INS;:}
+                |dollar INDICELISTA:IL dollar {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(IL); RESULT = INS;:};
+                //|dollar DIME:D1 masMas:mas DIME:D2 dollar {:Nodo INS = new Nodo("INSTRUCCIONES"); INS.insertarNodo(D1); INS.insertarNodo(new Nodo("++",masleft,masright)); INS.insertarNodo(D2); RESULT = INS;:};
+
+IF ::= si:si EXPL:E then INS:INS fin {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo("If",sileft,siright)); I.insertarNodo(E); I.insertarNodo(INS); RESULT = I;:}
+       |si:si EXPL:E then INS:INS sino:sino INS:INS2 fin {:Nodo I = new Nodo("IF"); I.insertarNodo(new Nodo("If",sileft,siright)); I.insertarNodo(E); I.insertarNodo(INS); I.insertarNodo(INS2); RESULT = I;:};
+
+CASE ::= caso:caso EXPL:E CASOS:CASOS fin {:
+                                            Nodo C = new Nodo("CASE"); C.insertarNodo(new Nodo(caso,casoleft,casoright)); 
+                                            C.insertarNodo(E); 
+                                            
+                                            Nodo CA = new Nodo("CASOS");
+                                            for (Nodo nodo1 : listaCasos) {
+                                              CA.insertarNodo(nodo1);
+                                            }
+                                            C.insertarNodo(CA); 
+                                            RESULT = C;:};
+
+CASOS ::= CASOS:C1 CASOS2:C2 {:listaCasos.add(C2);:}
+        |CASOS2:C1 {:
+                    listaCasos.clear();
+                    listaCasos.add(C1);:};
+
+CASOS2 ::= entero:e dosPuntos INS:I pC {:Nodo C = new Nodo("CASOS2"); C.insertarNodo(new Nodo(e,"entero",eleft,eright)); C.insertarNodo(I); RESULT = C;:}
+         |caracter:cad dosPuntos INS:I pC {:Nodo C = new Nodo("CASOS2"); C.insertarNodo(new Nodo(cad,"cadena",cadleft,cadright)); C.insertarNodo(I); RESULT = C;:};
+
+
+
+DIME ::=aC DIME2:V cC {:
+                    Nodo D = new Nodo("DIME"); 
+                    for (Nodo nodo1 : dimen) {
+                                D.insertarNodo(nodo1);
+                    }  
+                    RESULT = D;
+                    :}
+        |DIME2:D2 {:
+                    
+                    Nodo D = new Nodo("DIME"); 
+                    for (Nodo nodo1 : dimen) {
+                                D.insertarNodo(nodo1);
+                    }    
+                    RESULT = D;:}
+        |cadena:cad {:Nodo D = new Nodo("DIME"); D.insertarNodo(new Nodo(cad,"cadena",cadleft,cadright)); RESULT = D;:}
+        |id:id {:Nodo D = new Nodo("DIME"); D.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT = D;:}
+        |dollar OPLISTAS:OL dollar {:Nodo D = new Nodo("DIME"); D.insertarNodo(OL); RESULT = D;:}
+        |dollar LLAMADAS:LL dollar {:Nodo D = new Nodo("DIME"); D.insertarNodo(LL); RESULT = D;:}
+        |porcentaje:p {:Nodo E = new Nodo("DIME"); E.insertarNodo(new Nodo("%",pleft,pright)); RESULT = E;:}
+        |DIME:D1 masMas:ma DIME:D2 {:Nodo D = new Nodo("DIME"); D.insertarNodo(D1); D.insertarNodo(new Nodo("++",maleft,maright)); D.insertarNodo(D2); RESULT = D;:};
+ 
+DIME2 ::= DIME2:D2 coma aC VALORES:V cC {:
+                            Nodo D = new Nodo("DIME2");
+                            for (Nodo nodo1 : listaValores) {
+                                D.insertarNodo(nodo1);
+                            }  
+                            dimen.add(D); 
+                            :}
+         |aC VALORES:V cC{:
+                            dimen.clear();
+                           Nodo D = new Nodo("DIME2"); 
+                           for (Nodo nodo1 : listaValores) {
+                                D.insertarNodo(nodo1);
+                           }
+                            dimen.add(D);:};
+
+VALORES ::= VALORES:V1 coma LIST2:L {:listaValores.add(L);:}
+            |LIST2:L {:
+                    listaValores.clear();
+                    listaValores.add(L);
+                    :};
+
+
+LIST2 ::= id:id {:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT =L2;:}
+        |dollar sum:s DIME:D dollar{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(s,sleft,sright)); L2.insertarNodo(D);  RESULT =L2;:}
+        |dollar product:p DIME:D dollar{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(p,pleft,pright)); L2.insertarNodo(D); RESULT =L2; :}
+        |dollar tamanio:t DIME:D dollar{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(t,tleft,tright)); L2.insertarNodo(D);  RESULT =L2;:}
+        |dollar LLAMADAS:LL dollar {:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(LL); RESULT =L2; :}
+        |caracter:c{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(c,"caracter",cleft,cright)); RESULT =L2; :}
+        |cadena:c{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(c,"caracter",cleft,cright)); RESULT =L2; :}
+        |entero:c{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(c,"entero",cleft,cright)); RESULT =L2; :}
+        |decimal:c{:Nodo L2 = new Nodo("LIST2"); L2.insertarNodo(new Nodo(c,"decimal",cleft,cright)); RESULT =L2; :};
+
+OPLISTAS ::= sum:s DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(s,sleft,sright)); OL.insertarNodo(D); RESULT =OL;:}
+            |product:p DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(p,pleft,pright)); OL.insertarNodo(D);RESULT =OL;:}
+            |revers:r DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(r,rleft,rright)); OL.insertarNodo(D);RESULT =OL;:}
+            |impr:i DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(i,ileft,iright)); OL.insertarNodo(D);RESULT =OL;:}
+            |par:p DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(p,pleft,pright)); OL.insertarNodo(D);RESULT =OL;:}
+            |asc:a DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(a,aleft,aright)); OL.insertarNodo(D);RESULT =OL;:}
+            |desc:d DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(d,dleft,dright)); OL.insertarNodo(D);RESULT =OL;:}
+            |tamanio:t DIME:D {:Nodo OL = new Nodo("OPLISTAS"); OL.insertarNodo(new Nodo(t,tleft,tright)); OL.insertarNodo(D);RESULT =OL;:};
+
+LLAMADAS ::= LLAMARFUN:LLF {:Nodo LL = new Nodo("LLAMADAS"); LL.insertarNodo(LLF);RESULT = LL;:}
+            |LLAMADASNETAS:LLN {:Nodo LL = new Nodo("LLAMADAS"); LL.insertarNodo(LLN);RESULT = LL;:};
+
+LLAMADASNETAS ::= calcular:c EXP:E {:Nodo LLN = new Nodo("LLAMADASNETAS"); LLN.insertarNodo(new Nodo(c,cleft,cright)); LLN.insertarNodo(E);RESULT = LLN;:}
+                 |succ:s EXP:E {:Nodo LLN = new Nodo("LLAMADASNETAS"); LLN.insertarNodo(new Nodo(s,sleft,sright)); LLN.insertarNodo(E);RESULT = LLN;:}
+                 |decc:d EXP:E {:Nodo LLN = new Nodo("LLAMADASNETAS"); LLN.insertarNodo(new Nodo(d,dleft,dright)); LLN.insertarNodo(E);RESULT = LLN;:}
+                 |min:m EXP:E {:Nodo LLN = new Nodo("LLAMADASNETAS"); LLN.insertarNodo(new Nodo(m,mleft,mright)); LLN.insertarNodo(E);RESULT = LLN;:}
+                 |max:m EXP:E {:Nodo LLN = new Nodo("LLAMADASNETAS"); LLN.insertarNodo(new Nodo(m,mleft,mright)); LLN.insertarNodo(E);RESULT = LLN;:};
+
+LLAMARFUN ::= id:id aL:al cL:cl {:Nodo LLF = new Nodo("LLAMARFUN"); LLF.insertarNodo(new Nodo(id,"id",idleft,idright));RESULT = LLF;:}
+            |id:id aL:al PARAMETROS cL:cl {:
+                                               Nodo LLF = new Nodo("LLAMARFUN"); 
+                                               LLF.insertarNodo(new Nodo(id,"id",idleft,idright));
+                                               Nodo P2 = new Nodo("PARAMETROS");
+                                               for (Nodo nodo1 : listaPar) {
+                                                        P2.insertarNodo(nodo1);
+                                                    }
+                                               LLF.insertarNodo(P2);  
+                                               RESULT = LLF;:};
+
+PARAMETROS ::= PARAMETROS:P1 coma EXP:E {: listaPar.add(E);:}
+               |EXP:E {:listaPar.clear();
+                            listaPar.add(E);:};
+
+INDICELISTA ::= DIME:D indiceLista:ilist EXP:IL {:Nodo IDL = new Nodo("INDICELISTA"); IDL.insertarNodo(D); IDL.insertarNodo(new Nodo(ilist,ilistleft,ilistright)); IDL.insertarNodo(IL); RESULT = IDL;:}
+                |DIME:D indiceLista:ilist EXP:IL1 indiceLista:ilist2 EXP:IL2 {:Nodo IDL = new Nodo("INDICELISTA"); IDL.insertarNodo(D); IDL.insertarNodo(new Nodo(ilist,ilistleft,ilistright)); IDL.insertarNodo(IL1); IDL.insertarNodo(new Nodo(ilist2,ilist2left,ilist2right)); IDL.insertarNodo(IL2); RESULT = IDL;:}
+                |DIME:D1 masMas:m DIME:D2{:Nodo IDL = new Nodo("INDICELISTA"); IDL.insertarNodo(D1); IDL.insertarNodo(new Nodo(m,mleft,mright)); IDL.insertarNodo(D2); RESULT = IDL;:};
+
+
+EXP ::= EXP:E1 mas:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 menos:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 por:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 div:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 pot:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 mod:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 sqrt:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP:E1 masMas:o EXP:E2 {:Nodo E = new Nodo("EXP"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |menos:o EXP:E1 {:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo(o,oleft,oright)); E.insertarNodo(E1); RESULT=E;:}
+        |aP:ap EXP:E1 cP:cp {:Nodo E = new Nodo("EXP");  E.insertarNodo(new Nodo(ap,apleft,apright));  E.insertarNodo(E1); E.insertarNodo(new Nodo(cp,cpleft,cpright));RESULT=E;:}
+        |dollar LLAMADAS:LL dollar {:Nodo E = new Nodo("EXP"); E.insertarNodo(LL); RESULT = E;:}
+        |porcentaje:p {:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo("%",pleft,pright)); RESULT = E;:}
+        |entero:e{:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo(e,"entero",eleft,eright)); RESULT = E;:}
+        |decimal:d{:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo(d,"decimal",dleft,dright)); RESULT = E;:}
+        |caracter:c{:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo(c,"caracter",cleft,cright)); RESULT = E;:}
+        |cadena:c{:Nodo E = new Nodo("EXP"); E.insertarNodo(new Nodo(c,"cadena",cleft,cright)); RESULT = E;:}
+        |id:id {:Nodo E = new Nodo("EXP");E.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT = E;:}
+        |dollar OPLISTAS:OL dollar{:Nodo E = new Nodo("EXP"); E.insertarNodo(OL); RESULT = E;:}
+        |dollar INDICELISTA:IL dollar {:Nodo E = new Nodo("EXP"); E.insertarNodo(IL); RESULT = E;:}
+        |aC:ac VALORES:V cC:cc {:Nodo E = new Nodo("EXP");
+                                
+                                for (Nodo nodo1 : listaValores) {
+                                E.insertarNodo(nodo1);
+                                }
+                                RESULT = E;:}
+        |aC:ac DIME2:V cC:cc {:
+                            Nodo E = new Nodo("EXP");  
+                              for (Nodo nodo1 : dimen) {
+                                E.insertarNodo(nodo1);
+                            }        
+                            RESULT = E;:};
+
+EXPL ::=EXPL:E1 or:o EXPL:E2 {:Nodo E = new Nodo("EXPL"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPL:E1 and:o EXPL:E2 {:Nodo E = new Nodo("EXPL"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1{:Nodo E = new Nodo("EXPL"); E.insertarNodo(E1);RESULT=E;:}
+        |aP:ap EXPL:E1 cP:cp {:Nodo E = new Nodo("EXPL");  E.insertarNodo(new Nodo(ap,apleft,apright));  E.insertarNodo(E1); E.insertarNodo(new Nodo(cp,cpleft,cpright));RESULT=E;:};
+
+EXPR ::= EXPR:E1 menor:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1 mayor:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1 menorIgual:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1 mayorIgual:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1 igualIgual:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXPR:E1 diferente:o EXPR:E2 {:Nodo E = new Nodo("EXPR"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:} 
+        |EXP2:LL {:Nodo E = new Nodo("EXPR"); E.insertarNodo(LL); RESULT = E;:};
+
+
+
+EXP2 ::= EXP2:E1 mas:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 menos:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 por:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 div:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 pot:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 mod:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 sqrt:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |EXP2:E1 masMas:o EXP2:E2 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(E1); E.insertarNodo(new Nodo(o,oleft,oright));  E.insertarNodo(E2); RESULT=E;:}
+        |menos:o EXP2:E1 {:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo(o,oleft,oright)); E.insertarNodo(E1); RESULT=E;:}
+        |dollar LLAMADAS:LL dollar {:Nodo E = new Nodo("EXP2"); E.insertarNodo(LL); RESULT = E;:}
+        |porcentaje:p {:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo("%",pleft,pright)); RESULT = E;:}
+        |entero:e{:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo(e,"entero",eleft,eright)); RESULT = E;:}
+        |decimal:d{:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo(d,"decimal",dleft,dright)); RESULT = E;:}
+        |caracter:c{:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo(c,"caracter",cleft,cright)); RESULT = E;:}
+        |cadena:c{:Nodo E = new Nodo("EXP2"); E.insertarNodo(new Nodo(c,"cadena",cleft,cright)); RESULT = E;:}
+        |id:id {:Nodo E = new Nodo("EXP2");E.insertarNodo(new Nodo(id,"id",idleft,idright)); RESULT = E;:}
+        |dollar OPLISTAS:OL dollar{:Nodo E = new Nodo("EXP2"); E.insertarNodo(OL); RESULT = E;:}
+        |dollar INDICELISTA:IL dollar {:Nodo E = new Nodo("EXP2"); E.insertarNodo(IL); RESULT = E;:}
+        |aC:ac VALORES:V cC:cc {:Nodo E = new Nodo("EXP2");
+                                
+                                for (Nodo nodo1 : listaValores) {
+                                E.insertarNodo(nodo1);
+                                }
+                                RESULT = E;:}
+        |aC:ac DIME2:V cC:cc {:
+                            Nodo E = new Nodo("EXP2");  
+                              for (Nodo nodo1 : dimen) {
+                                E.insertarNodo(nodo1);
+                            }        
+                            RESULT = E;:};
